@@ -1,5 +1,6 @@
 package com.example.proyecto_evaluacion.data
 
+import android.content.Context
 import com.example.proyecto_evaluacion.dataDao.*
 import kotlinx.coroutines.flow.Flow
 
@@ -38,4 +39,24 @@ class CrmRepository(
     fun getSeguimientos(oportunidadId: Int): Flow<List<Seguimiento>> =
         seguimientoDao.getSeguimientosPorOportunidad(oportunidadId)
     suspend fun guardarSeguimiento(seguimiento: Seguimiento) = seguimientoDao.insert(seguimiento)
+
+    companion object {
+        @Volatile
+        private var INSTANCE: CrmRepository? = null
+
+        fun getInstance(context: Context): CrmRepository {
+            return INSTANCE ?: synchronized(this) {
+                val db = AppDatabase.getInstance(context)
+                val repo = CrmRepository(
+                    db.usuarioDao(),
+                    db.organizacionDao(),
+                    db.contactoDao(),
+                    db.oportunidadDao(),
+                    db.seguimientoDao()
+                )
+                INSTANCE = repo
+                repo
+            }
+        }
+    }
 }

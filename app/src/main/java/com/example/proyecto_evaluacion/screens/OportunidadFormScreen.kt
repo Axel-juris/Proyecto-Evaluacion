@@ -1,160 +1,210 @@
 package com.example.proyecto_evaluacion.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_evaluacion.components.CampoValidado
+import com.example.proyecto_evaluacion.components.SelectorDesplegable
+import com.example.proyecto_evaluacion.data.SessionManager
+import com.example.proyecto_evaluacion.validation.EventoValidator
 import com.example.proyecto_evaluacion.validation.OportunidadValidator
+import com.example.proyecto_evaluacion.viewmodel.OportunidadViewModel
 
-@Preview(showBackground = true)
 @Composable
-fun OportunidadFormScreen(modifier: Modifier = Modifier) {
-
-    var nombre by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var comuna by remember { mutableStateOf("") }
-    var requierePropuesta by remember { mutableStateOf(false) }
-    var recordatorio by remember { mutableStateOf(true) }
-
-    var errorNombre by remember { mutableStateOf<String?>(null) }
-    var errorDescripcion by remember { mutableStateOf<String?>(null) }
-    var errorComuna by remember { mutableStateOf<String?>(null) }
+fun OportunidadFormScreen(
+    modifier: Modifier = Modifier,
+    viewModel: OportunidadViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val organizaciones by viewModel.organizaciones.collectAsStateWithLifecycle()
+    val contactos by viewModel.contactos.collectAsStateWithLifecycle()
+    val usuario by SessionManager.usuarioActual.collectAsStateWithLifecycle()
+    val esSupervisor = usuario?.rol == "SUPERVISOR"
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        Text("Nueva oportunidad", fontSize = 27.sp)
-
-        OutlinedTextField(
-            value = nombre,
-            onValueChange = {
-                nombre = it
-                errorNombre = OportunidadValidator.validarNombre(it)
+        Text(
+            text = if (esSupervisor) {
+                "Quedará sin asignar hasta que la asignes a un ejecutivo."
+            } else {
+                "Esta oportunidad quedará asignada a ti."
             },
-            label = { Text("Nombre de la oportunidad") },
-            isError = errorNombre != null,
-            supportingText = { errorNombre?.let { Text(it) } },
-            trailingIcon = {
-                if (errorNombre != null) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Campo con error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                } else if (nombre.isNotEmpty()) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Campo válido"
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+            style = MaterialTheme.typography.bodySmall
         )
 
-        OutlinedTextField(
-            value = descripcion,
-            onValueChange = {
-                descripcion = it
-                errorDescripcion = OportunidadValidator.validarDescripcion(it)
-            },
-            label = { Text("Descripción") },
-            isError = errorDescripcion != null,
-            supportingText = { errorDescripcion?.let { Text(it) } },
-            trailingIcon = {
-                if (errorDescripcion != null) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Campo con error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                } else if (descripcion.isNotEmpty()) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Campo válido"
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = comuna,
-            onValueChange = {
-                comuna = it
-                errorComuna = OportunidadValidator.validarComuna(it)
-            },
-            label = { Text("Comuna") },
-            isError = errorComuna != null,
-            supportingText = { errorComuna?.let { Text(it) } },
-            trailingIcon = {
-                if (errorComuna != null) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Campo con error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                } else if (comuna.isNotEmpty()) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Campo válido"
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = requierePropuesta,
-                onCheckedChange = { requierePropuesta = it }
+        if (organizaciones.isEmpty()) {
+            Text(
+                text = "No hay organizaciones registradas. Primero registra una desde Inicio.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
             )
-            Text("Requiere propuesta")
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        CampoValidado(
+            label = "Nombre de la oportunidad",
+            value = uiState.titulo,
+            onValueChange = { viewModel.cambiarTitulo(it) },
+            error = uiState.errorTitulo
+        )
+
+        CampoValidado(
+            label = "Descripción",
+            value = uiState.descripcion,
+            onValueChange = { viewModel.cambiarDescripcion(it) },
+            error = uiState.errorDescripcion
+        )
+
+        SelectorDesplegable(
+            label = "Tipo de evento",
+            seleccion = uiState.tipoEvento,
+            opciones = EventoValidator.tiposValidos,
+            onSeleccionar = { indice ->
+                viewModel.cambiarTipo(EventoValidator.tiposValidos[indice])
+            },
+            error = uiState.errorTipo
+        )
+
+        SelectorDesplegable(
+            label = "Prioridad",
+            seleccion = uiState.prioridad,
+            opciones = OportunidadValidator.prioridades,
+            onSeleccionar = { indice ->
+                viewModel.cambiarPrioridad(OportunidadValidator.prioridades[indice])
+            },
+            error = uiState.errorPrioridad
+        )
+
+        SelectorDesplegable(
+            label = "Organización",
+            seleccion = uiState.organizacionNombre,
+            opciones = organizaciones.map { it.nombre },
+            onSeleccionar = { indice ->
+                val organizacion = organizaciones[indice]
+                viewModel.seleccionarOrganizacion(organizacion.id, organizacion.nombre)
+            },
+            error = uiState.errorOrganizacion
+        )
+
+        if (uiState.organizacionId != null) {
+            val opcionesContacto = listOf("Sin contacto") +
+                    contactos.map { "${it.nombre} (${it.cargo})" }
+
+            SelectorDesplegable(
+                label = "Contacto (opcional)",
+                seleccion = uiState.contactoNombre,
+                opciones = opcionesContacto,
+                onSeleccionar = { indice ->
+                    if (indice == 0) {
+                        viewModel.seleccionarContacto(null, "Sin contacto")
+                    } else {
+                        val contacto = contactos[indice - 1]
+                        viewModel.seleccionarContacto(
+                            contacto.id,
+                            "${contacto.nombre} (${contacto.cargo})"
+                        )
+                    }
+                },
+                error = null
+            )
+
+            if (contactos.isEmpty()) {
+                Text(
+                    text = "Esta organización aún no tiene contactos registrados.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        CampoValidado(
+            label = "Fecha de inicio (dd/mm/aaaa)",
+            value = uiState.fechaInicio,
+            onValueChange = { viewModel.cambiarFechaInicio(it) },
+            error = uiState.errorFechaInicio
+        )
+
+        CampoValidado(
+            label = "Fecha de término (dd/mm/aaaa)",
+            value = uiState.fechaTermino,
+            onValueChange = { viewModel.cambiarFechaTermino(it) },
+            error = uiState.errorFechaTermino
+        )
+
+        CampoValidado(
+            label = "Horario de inicio (HH:mm)",
+            value = uiState.horario,
+            onValueChange = { viewModel.cambiarHorario(it) },
+            error = uiState.errorHorario
+        )
+
+        CampoValidado(
+            label = "Lugar del evento (comuna y región)",
+            value = uiState.lugar,
+            onValueChange = { viewModel.cambiarLugar(it) },
+            error = uiState.errorLugar
+        )
+
+        CampoValidado(
+            label = "Público esperado (cantidad de asistentes)",
+            value = uiState.publico,
+            onValueChange = { viewModel.cambiarPublico(it) },
+            error = uiState.errorPublico,
+            keyboardType = KeyboardType.Number
+        )
+
+        CampoValidado(
+            label = "Costo referencial en pesos (ficticio)",
+            value = uiState.costo,
+            onValueChange = { viewModel.cambiarCosto(it) },
+            error = uiState.errorCosto,
+            keyboardType = KeyboardType.Number
+        )
+
+        AnimatedVisibility(
+            visible = uiState.guardadoExitoso,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
-            Text("Activar recordatorio")
-            Switch(
-                checked = recordatorio,
-                onCheckedChange = { recordatorio = it }
+            Text(
+                text = "Oportunidad guardada correctamente",
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        AnimatedVisibility(
+            visible = uiState.errorOperacion != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Text(
+                text = uiState.errorOperacion ?: "",
+                color = MaterialTheme.colorScheme.error
             )
         }
 
         Button(
-            onClick = {
-                errorNombre = OportunidadValidator.validarNombre(nombre)
-                errorDescripcion = OportunidadValidator.validarDescripcion(descripcion)
-                errorComuna = OportunidadValidator.validarComuna(comuna)
-
-                if (errorNombre == null && errorDescripcion == null && errorComuna == null) {
-                    println("***** OPORTUNIDAD *****")
-                    println("Nombre: $nombre")
-                    println("Descripción: $descripcion")
-                    println("Comuna: $comuna")
-                    println("Requiere propuesta: $requierePropuesta")
-                    println("Recordatorio: $recordatorio")
-                }
-            },
+            onClick = { viewModel.guardar() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Guardar")
+            Text("Guardar oportunidad")
         }
     }
 }

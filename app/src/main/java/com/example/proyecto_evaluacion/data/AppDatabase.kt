@@ -5,11 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.proyecto_evaluacion.data.*
-import com.example.proyecto_evaluacion.dataDao.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.proyecto_evaluacion.dataDao.ContactoDao
+import com.example.proyecto_evaluacion.dataDao.OportunidadDao
+import com.example.proyecto_evaluacion.dataDao.OrganizacionDao
+import com.example.proyecto_evaluacion.dataDao.SeguimientoDao
+import com.example.proyecto_evaluacion.dataDao.UsuarioDao
 
 @Database(
     entities = [
@@ -49,40 +49,14 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private class DatabaseCallback : RoomDatabase.Callback() {
+            // Cuentas ficticias del checklist: 1 supervisor y 3 ejecutivos.
+            // Se insertan con SQL dentro de onCreate para que existan antes del primer login.
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                INSTANCE?.let { database ->
-                    CoroutineScope(Dispatchers.IO).launch {
-                        // Cuentas ficticias de prueba solicitadas por el checklist oficial
-                        val usuariosPrueba = listOf(
-                            Usuario(
-                                nombre = "Carlos Supervisor",
-                                correo = "supervisor@duoc.cl",
-                                password = "123",
-                                rol = "SUPERVISOR"
-                            ),
-                            Usuario(
-                                nombre = "Ana Ejecutivo",
-                                correo = "ana@duoc.cl",
-                                password = "123",
-                                rol = "EJECUTIVO"
-                            ),
-                            Usuario(
-                                nombre = "Bruno Ejecutivo",
-                                correo = "bruno@duoc.cl",
-                                password = "123",
-                                rol = "EJECUTIVO"
-                            ),
-                            Usuario(
-                                nombre = "Carla Ejecutivo",
-                                correo = "carla@duoc.cl",
-                                password = "123",
-                                rol = "EJECUTIVO"
-                            )
-                        )
-                        database.usuarioDao().insertAll(usuariosPrueba)
-                    }
-                }
+                db.execSQL("INSERT INTO usuarios (nombre, correo, password, rol) VALUES ('Carlos Supervisor', 'supervisor@duoc.cl', 'clave123', 'SUPERVISOR')")
+                db.execSQL("INSERT INTO usuarios (nombre, correo, password, rol) VALUES ('Ana Ejecutivo', 'ana@duoc.cl', 'clave123', 'EJECUTIVO')")
+                db.execSQL("INSERT INTO usuarios (nombre, correo, password, rol) VALUES ('Bruno Ejecutivo', 'bruno@duoc.cl', 'clave123', 'EJECUTIVO')")
+                db.execSQL("INSERT INTO usuarios (nombre, correo, password, rol) VALUES ('Carla Ejecutivo', 'carla@duoc.cl', 'clave123', 'EJECUTIVO')")
             }
         }
     }

@@ -38,6 +38,8 @@ data class Oportunidad(
     val prioridad: String, // "ALTA", "MEDIA", "BAJA"
     val fechaCreacion: String,
     val fechaEvento: String,
+    val fechaTermino: String,
+    val horario: String,
     val lugarEvento: String,
     val tipoEvento: String,
     val publicoEsperado: Int,

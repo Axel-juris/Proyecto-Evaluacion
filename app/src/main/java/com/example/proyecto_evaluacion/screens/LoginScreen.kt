@@ -1,32 +1,35 @@
+
 package com.example.proyecto_evaluacion.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyecto_evaluacion.validation.LoginValidator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_evaluacion.components.CampoValidado
+import com.example.proyecto_evaluacion.viewmodel.LoginViewModel
 
-@Preview(showBackground = true)
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onLoginExitoso: () -> Unit = {}
+    onLoginExitoso: () -> Unit = {},
+    viewModel: LoginViewModel = viewModel()
 ) {
-
-    var usuario by remember { mutableStateOf("") }
-    var clave by remember { mutableStateOf("") }
-
-    var errorUsuario by remember { mutableStateOf<String?>(null) }
-    var errorClave by remember { mutableStateOf<String?>(null) }
-    var errorLogin by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -38,62 +41,27 @@ fun LoginScreen(
         Text("Radar de Eventos", fontSize = 27.sp)
         Text("Inicia sesión para continuar")
 
-        OutlinedTextField(
-            value = usuario,
-            onValueChange = {
-                usuario = it
-                errorUsuario = LoginValidator.validarUsuario(it)
-                errorLogin = null
-            },
-            label = { Text("Usuario") },
-            isError = errorUsuario != null,
-            supportingText = { errorUsuario?.let { Text(it) } },
-            trailingIcon = {
-                if (errorUsuario != null) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Campo con error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                } else if (usuario.isNotEmpty()) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Campo válido"
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+        CampoValidado(
+            label = "Correo",
+            value = uiState.correo,
+            onValueChange = { viewModel.cambiarCorreo(it) },
+            error = uiState.errorCorreo,
+            keyboardType = KeyboardType.Email
         )
 
-        OutlinedTextField(
-            value = clave,
-            onValueChange = {
-                clave = it
-                errorClave = LoginValidator.validarClave(it)
-                errorLogin = null
-            },
-            label = { Text("Clave") },
-            visualTransformation = PasswordVisualTransformation(),
-            isError = errorClave != null,
-            supportingText = { errorClave?.let { Text(it) } },
-            trailingIcon = {
-                if (errorClave != null) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Campo con error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                } else if (clave.isNotEmpty()) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Campo válido"
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+        CampoValidado(
+            label = "Clave",
+            value = uiState.clave,
+            onValueChange = { viewModel.cambiarClave(it) },
+            error = uiState.errorClave,
+            visualTransformation = PasswordVisualTransformation()
         )
 
-        errorLogin?.let {
+        AnimatedVisibility(
+            visible = uiState.errorLogin != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -103,27 +71,28 @@ fun LoginScreen(
                     contentDescription = "Error de acceso",
                     tint = MaterialTheme.colorScheme.error
                 )
-                Text(it, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = uiState.errorLogin ?: "",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
 
         Button(
-            onClick = {
-                errorUsuario = LoginValidator.validarUsuario(usuario)
-                errorClave = LoginValidator.validarClave(clave)
-
-                if (errorUsuario == null && errorClave == null) {
-                    if (LoginValidator.credencialesValidas(usuario, clave)) {
-                        errorLogin = null
-                        onLoginExitoso()
-                    } else {
-                        errorLogin = "Usuario o clave incorrectos"
-                    }
-                }
-            },
+            onClick = { viewModel.ingresar(onLoginExitoso) },
+            enabled = !uiState.cargando,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Ingresar")
+            if (uiState.cargando) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+            } else {
+                Text("Ingresar")
+            }
         }
+
+        Text(
+            text = "Cuentas de prueba (clave: clave123): supervisor@duoc.cl, ana@duoc.cl, bruno@duoc.cl, carla@duoc.cl",
+            fontSize = 12.sp
+        )
     }
 }

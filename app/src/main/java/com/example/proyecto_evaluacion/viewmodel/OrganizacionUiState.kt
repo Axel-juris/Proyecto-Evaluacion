@@ -17,5 +17,6 @@ data class OrganizacionUiState(
     val errorSitioWeb: String? = null,
     val errorObservaciones: String? = null,
 
+    val errorOperacion: String? = null,
     val guardadoExitoso: Boolean = false
 )

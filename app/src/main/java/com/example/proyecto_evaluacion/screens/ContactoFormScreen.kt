@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_evaluacion.components.CampoValidado
+import com.example.proyecto_evaluacion.components.SelectorDesplegable
 import com.example.proyecto_evaluacion.validation.ContactoValidator
 import com.example.proyecto_evaluacion.viewmodel.ContactoViewModel
 
@@ -27,6 +28,8 @@ fun ContactoFormScreen(
     viewModel: ContactoViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val organizaciones by viewModel.organizaciones.collectAsStateWithLifecycle()
+    val contactos by viewModel.contactos.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -41,18 +44,30 @@ fun ContactoFormScreen(
             fontSize = 12.sp
         )
 
+        if (organizaciones.isEmpty()) {
+            Text(
+                text = "No hay organizaciones registradas. Primero registra una desde Inicio.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        SelectorDesplegable(
+            label = "Organización",
+            seleccion = uiState.organizacionNombre,
+            opciones = organizaciones.map { it.nombre },
+            onSeleccionar = { indice ->
+                val organizacion = organizaciones[indice]
+                viewModel.seleccionarOrganizacion(organizacion.id, organizacion.nombre)
+            },
+            error = uiState.errorOrganizacion
+        )
+
         CampoValidado(
             label = "Nombre del contacto (ficticio)",
             value = uiState.nombre,
             onValueChange = { viewModel.cambiarNombre(it) },
             error = uiState.errorNombre
-        )
-
-        CampoValidado(
-            label = "Organización",
-            value = uiState.organizacion,
-            onValueChange = { viewModel.cambiarOrganizacion(it) },
-            error = uiState.errorOrganizacion
         )
 
         CampoValidado(
@@ -62,14 +77,13 @@ fun ContactoFormScreen(
             error = uiState.errorCargo
         )
 
-        Text(
-            text = "Áreas válidas: " + ContactoValidator.areasValidas.joinToString(", "),
-            fontSize = 12.sp
-        )
-        CampoValidado(
+        SelectorDesplegable(
             label = "Área",
-            value = uiState.area,
-            onValueChange = { viewModel.cambiarArea(it) },
+            seleccion = uiState.area,
+            opciones = ContactoValidator.areasValidas,
+            onSeleccionar = { indice ->
+                viewModel.cambiarArea(ContactoValidator.areasValidas[indice])
+            },
             error = uiState.errorArea
         )
 
@@ -89,14 +103,13 @@ fun ContactoFormScreen(
             keyboardType = KeyboardType.Phone
         )
 
-        Text(
-            text = "Medios válidos: " + ContactoValidator.mediosValidos.joinToString(", "),
-            fontSize = 12.sp
-        )
-        CampoValidado(
+        SelectorDesplegable(
             label = "Medio de contacto preferente",
-            value = uiState.medio,
-            onValueChange = { viewModel.cambiarMedio(it) },
+            seleccion = uiState.medio,
+            opciones = ContactoValidator.mediosValidos,
+            onSeleccionar = { indice ->
+                viewModel.cambiarMedio(ContactoValidator.mediosValidos[indice])
+            },
             error = uiState.errorMedio
         )
 
@@ -118,11 +131,66 @@ fun ContactoFormScreen(
             )
         }
 
+        AnimatedVisibility(
+            visible = uiState.errorOperacion != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Text(
+                text = uiState.errorOperacion ?: "",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
         Button(
             onClick = { viewModel.guardar() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Guardar contacto")
+        }
+
+        HorizontalDivider()
+
+        if (uiState.organizacionId == null) {
+            Text(
+                text = "Selecciona una organización para ver sus contactos.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+            Text(
+                text = "Contactos de ${uiState.organizacionNombre} (${contactos.size})",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            if (contactos.isEmpty()) {
+                Text(
+                    text = "Esta organización aún no tiene contactos.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                contactos.forEach { contacto ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = contacto.nombre,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                text = "${contacto.cargo} · ${contacto.area}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "${contacto.correo} · ${contacto.telefono}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Prefiere: ${contacto.medioPreferente}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

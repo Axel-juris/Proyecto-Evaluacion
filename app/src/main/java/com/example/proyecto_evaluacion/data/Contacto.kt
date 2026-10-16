@@ -22,6 +22,9 @@ data class Contacto(
     val organizacionId: Int,
     val nombre: String,
     val cargo: String,
+    val area: String,
     val correo: String,
-    val telefono: String
+    val telefono: String,
+    val medioPreferente: String,
+    val observaciones: String = ""
 )
