@@ -15,6 +15,9 @@ interface OportunidadDao {
     @Query("SELECT * FROM oportunidades WHERE id = :id LIMIT 1")
     suspend fun getOportunidadPorId(id: Int): Oportunidad?
 
+    @Query("SELECT * FROM oportunidades WHERE id = :id LIMIT 1")
+    fun observarOportunidadPorId(id: Int): Flow<Oportunidad?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(oportunidad: Oportunidad): Long
 
@@ -26,4 +29,7 @@ interface OportunidadDao {
 
     @Query("UPDATE oportunidades SET estado = :nuevoEstado WHERE id = :oportunidadId")
     suspend fun cambiarEstado(oportunidadId: Int, nuevoEstado: String)
+
+    @Query("UPDATE oportunidades SET fotoUri = :fotoUri WHERE id = :oportunidadId")
+    suspend fun actualizarFoto(oportunidadId: Int, fotoUri: String?)
 }

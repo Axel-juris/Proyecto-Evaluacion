@@ -9,6 +9,9 @@ interface SeguimientoDao {
     @Query("SELECT * FROM seguimientos WHERE oportunidadId = :oportunidadId ORDER BY id DESC")
     fun getSeguimientosPorOportunidad(oportunidadId: Int): Flow<List<Seguimiento>>
 
+    @Query("SELECT * FROM seguimientos ORDER BY id DESC")
+    fun getAllSeguimientos(): Flow<List<Seguimiento>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(seguimiento: Seguimiento)
 }

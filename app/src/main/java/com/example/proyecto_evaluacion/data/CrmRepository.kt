@@ -14,19 +14,23 @@ class CrmRepository(
     // === Usuarios ===
     suspend fun login(correo: String, pass: String) = usuarioDao.login(correo, pass)
     fun getEjecutivos(): Flow<List<Usuario>> = usuarioDao.getEjecutivos()
+    fun getUsuarios(): Flow<List<Usuario>> = usuarioDao.getAllUsuarios()
 
     // === Organizaciones y Contactos ===
     fun getOrganizaciones(): Flow<List<Organizacion>> = organizacionDao.getAllOrganizaciones()
     suspend fun guardarOrganizacion(org: Organizacion) = organizacionDao.insert(org)
 
     fun getContactos(orgId: Int): Flow<List<Contacto>> = contactoDao.getContactosPorOrganizacion(orgId)
+    fun getTodosContactos(): Flow<List<Contacto>> = contactoDao.getAllContactos()
     suspend fun guardarContacto(contacto: Contacto) = contactoDao.insert(contacto)
 
     // === Oportunidades ===
     fun getTodasOportunidades(): Flow<List<Oportunidad>> = oportunidadDao.getAllOportunidades()
     fun getOportunidadesPorEjecutivo(ejecutivoId: Int): Flow<List<Oportunidad>> =
         oportunidadDao.getOportunidadesPorEjecutivo(ejecutivoId)
-
+    suspend fun actualizarFotoOportunidad(oportunidadId: Int, fotoUri: String?) =
+        oportunidadDao.actualizarFoto(oportunidadId, fotoUri)
+    fun observarOportunidad(id: Int): Flow<Oportunidad?> = oportunidadDao.observarOportunidadPorId(id)
     suspend fun getOportunidadPorId(id: Int) = oportunidadDao.getOportunidadPorId(id)
     suspend fun guardarOportunidad(oportunidad: Oportunidad) = oportunidadDao.insert(oportunidad)
     suspend fun actualizarOportunidad(oportunidad: Oportunidad) = oportunidadDao.update(oportunidad)
@@ -39,7 +43,7 @@ class CrmRepository(
     fun getSeguimientos(oportunidadId: Int): Flow<List<Seguimiento>> =
         seguimientoDao.getSeguimientosPorOportunidad(oportunidadId)
     suspend fun guardarSeguimiento(seguimiento: Seguimiento) = seguimientoDao.insert(seguimiento)
-
+    fun getTodosSeguimientos(): Flow<List<Seguimiento>> = seguimientoDao.getAllSeguimientos()
     companion object {
         @Volatile
         private var INSTANCE: CrmRepository? = null
