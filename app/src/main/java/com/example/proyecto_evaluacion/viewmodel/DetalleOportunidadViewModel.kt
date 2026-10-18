@@ -107,6 +107,9 @@ class DetalleOportunidadViewModel(application: Application) : AndroidViewModel(a
                 },
                 esSupervisor = esSupervisor,
                 autorizado = autorizado,
+                puedeEditar = ReglasEstado.puedeEditar(
+                    rol, idUsuario, oportunidad.ejecutivoId, oportunidad.estado
+                ),
                 transicionesPermitidas = if (autorizado && rol != null) {
                     ReglasEstado.transicionesPermitidas(oportunidad.estado, rol)
                 } else {

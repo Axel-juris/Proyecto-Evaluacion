@@ -1,6 +1,5 @@
 package com.example.proyecto_evaluacion.viewmodel
 
-
 import com.example.proyecto_evaluacion.data.Oportunidad
 import com.example.proyecto_evaluacion.data.Seguimiento
 import com.example.proyecto_evaluacion.data.Usuario
@@ -35,6 +34,7 @@ data class DetalleOportunidadUiState(
     val seguimientos: List<SeguimientoItem> = emptyList(),
     val esSupervisor: Boolean = false,
     val autorizado: Boolean = true,
+    val puedeEditar: Boolean = false,
     val transicionesPermitidas: List<String> = emptyList(),
     val form: EstadoFormulario = EstadoFormulario()
 )

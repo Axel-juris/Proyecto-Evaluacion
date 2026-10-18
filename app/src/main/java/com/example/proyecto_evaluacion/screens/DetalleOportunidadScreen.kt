@@ -48,6 +48,7 @@ import com.example.proyecto_evaluacion.viewmodel.DetalleOportunidadViewModel
 fun DetalleOportunidadScreen(
     oportunidadId: Int,
     modifier: Modifier = Modifier,
+    onEditar: (Int) -> Unit = {},
     viewModel: DetalleOportunidadViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -73,7 +74,7 @@ fun DetalleOportunidadScreen(
             modifier
         )
     } else {
-        ContenidoDetalle(uiState, oportunidad, viewModel, modifier)
+        ContenidoDetalle(uiState, oportunidad, viewModel, onEditar, modifier)
     }
 }
 
@@ -94,6 +95,7 @@ private fun ContenidoDetalle(
     uiState: DetalleOportunidadUiState,
     oportunidad: Oportunidad,
     viewModel: DetalleOportunidadViewModel,
+    onEditar: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -276,6 +278,15 @@ private fun ContenidoDetalle(
             }
 
             HorizontalDivider()
+
+            if (uiState.puedeEditar) {
+                OutlinedButton(
+                    onClick = { onEditar(oportunidad.id) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Editar oportunidad")
+                }
+            }
 
             Text(text = "Estado de la gestión", style = MaterialTheme.typography.titleMedium)
 

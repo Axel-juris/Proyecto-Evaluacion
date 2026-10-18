@@ -13,10 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_evaluacion.components.CampoValidado
+import com.example.proyecto_evaluacion.ui.theme.colorExito
 import com.example.proyecto_evaluacion.validation.OrganizacionValidator
 import com.example.proyecto_evaluacion.viewmodel.OrganizacionViewModel
 
@@ -44,8 +44,9 @@ fun OrganizacionFormScreen(
 
         Text(
             text = "Tipos válidos: " + OrganizacionValidator.tiposValidos.joinToString(", "),
-            fontSize = 12.sp
+            style = MaterialTheme.typography.bodySmall
         )
+
         CampoValidado(
             label = "Tipo de organización",
             value = uiState.tipo,
@@ -95,7 +96,7 @@ fun OrganizacionFormScreen(
         ) {
             Text(
                 text = "Organización guardada correctamente",
-                color = MaterialTheme.colorScheme.primary
+                color = colorExito()
             )
         }
 

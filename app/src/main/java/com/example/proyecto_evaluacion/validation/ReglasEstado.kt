@@ -1,6 +1,6 @@
 package com.example.proyecto_evaluacion.validation
 
-// Reglas de negocio: qué cambios de estado puede hacer cada rol
+// Reglas de negocio: qué puede hacer cada rol con una oportunidad
 object ReglasEstado {
 
     fun transicionesPermitidas(estadoActual: String, rol: String): List<String> {
@@ -21,5 +21,20 @@ object ReglasEstado {
 
             else -> emptyList()
         }
+    }
+
+    // Edición de datos: el supervisor siempre; el ejecutivo solo si es suya y sigue abierta
+    fun puedeEditar(
+        rol: String?,
+        usuarioId: Int?,
+        ejecutivoId: Int?,
+        estado: String
+    ): Boolean = when (rol) {
+        "SUPERVISOR" -> true
+        "EJECUTIVO" ->
+            usuarioId != null &&
+                    ejecutivoId == usuarioId &&
+                    (estado == "NUEVA" || estado == "EN_GESTION")
+        else -> false
     }
 }

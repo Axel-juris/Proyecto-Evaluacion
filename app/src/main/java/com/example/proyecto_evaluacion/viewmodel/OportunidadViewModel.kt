@@ -9,12 +9,14 @@ import com.example.proyecto_evaluacion.data.Oportunidad
 import com.example.proyecto_evaluacion.data.Organizacion
 import com.example.proyecto_evaluacion.data.SessionManager
 import com.example.proyecto_evaluacion.validation.OportunidadValidator
+import com.example.proyecto_evaluacion.validation.ReglasEstado
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -44,6 +46,65 @@ class OportunidadViewModel(application: Application) : AndroidViewModel(applicat
             if (id == null) flowOf(emptyList()) else repository.getContactos(id)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Carga una oportunidad existente en el formulario, si el usuario tiene permiso para editarla
+    fun cargarParaEdicion(id: Int) {
+        // Si ya se cargó (por ejemplo, tras girar la pantalla) no se vuelve a pisar lo escrito
+        if (_uiState.value.editandoId == id) return
+
+        _uiState.update { it.copy(editandoId = id, cargandoEdicion = true, mensajeBloqueo = null) }
+
+        viewModelScope.launch {
+            try {
+                val oportunidad = repository.getOportunidadPorId(id)
+                if (oportunidad == null) {
+                    bloquear("No se encontró la oportunidad")
+                    return@launch
+                }
+
+                val usuario = SessionManager.usuarioActual.value
+                val permitido = ReglasEstado.puedeEditar(
+                    usuario?.rol, usuario?.id, oportunidad.ejecutivoId, oportunidad.estado
+                )
+                if (!permitido) {
+                    bloquear("No tienes permiso para editar esta oportunidad")
+                    return@launch
+                }
+
+                val organizacion = repository.getOrganizaciones().first()
+                    .firstOrNull { it.id == oportunidad.organizacionId }
+
+                val contacto = oportunidad.contactoId?.let { contactoId ->
+                    repository.getContactos(oportunidad.organizacionId).first()
+                        .firstOrNull { it.id == contactoId }
+                }
+
+                _uiState.value = OportunidadUiState(
+                    titulo = oportunidad.titulo,
+                    descripcion = oportunidad.descripcion,
+                    tipoEvento = oportunidad.tipoEvento,
+                    prioridad = oportunidad.prioridad,
+                    organizacionId = oportunidad.organizacionId,
+                    organizacionNombre = organizacion?.nombre ?: "",
+                    contactoId = contacto?.id,
+                    contactoNombre = contacto?.let { "${it.nombre} (${it.cargo})" } ?: "Sin contacto",
+                    fechaInicio = oportunidad.fechaEvento,
+                    fechaTermino = oportunidad.fechaTermino,
+                    horario = oportunidad.horario,
+                    lugar = oportunidad.lugarEvento,
+                    publico = oportunidad.publicoEsperado.toString(),
+                    costo = oportunidad.monto.toLong().toString(),
+                    editandoId = id
+                )
+            } catch (e: Exception) {
+                bloquear("No se pudo cargar la oportunidad, intenta de nuevo")
+            }
+        }
+    }
+
+    private fun bloquear(mensaje: String) {
+        _uiState.update { it.copy(cargandoEdicion = false, mensajeBloqueo = mensaje) }
+    }
 
     fun cambiarTitulo(valor: String) {
         _uiState.update {
@@ -240,31 +301,67 @@ class OportunidadViewModel(application: Application) : AndroidViewModel(applicat
             return
         }
 
+        val editandoId = estado.editandoId
+
         viewModelScope.launch {
             try {
-                val hoy = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
-
-                repository.guardarOportunidad(
-                    Oportunidad(
-                        titulo = estado.titulo.trim(),
-                        descripcion = estado.descripcion.trim(),
-                        monto = estado.costo.trim().toDouble(),
-                        estado = "NUEVA",
-                        prioridad = estado.prioridad,
-                        fechaCreacion = hoy,
-                        fechaEvento = estado.fechaInicio.trim(),
-                        fechaTermino = estado.fechaTermino.trim(),
-                        horario = estado.horario.trim(),
-                        lugarEvento = estado.lugar.trim(),
-                        tipoEvento = estado.tipoEvento,
-                        publicoEsperado = estado.publico.trim().toInt(),
-                        organizacionId = organizacionId,
-                        contactoId = estado.contactoId,
-                        // Ejecutivo: queda asignada a él. Supervisor: queda sin asignar.
-                        ejecutivoId = if (usuario.rol == "EJECUTIVO") usuario.id else null
+                if (editandoId != null) {
+                    // Edición: se parte de la oportunidad guardada para conservar estado,
+                    // responsable, fecha de detección y foto, que no se editan aquí
+                    val original = repository.getOportunidadPorId(editandoId)
+                    val permitido = original != null && ReglasEstado.puedeEditar(
+                        usuario.rol, usuario.id, original.ejecutivoId, original.estado
                     )
-                )
-                _uiState.value = OportunidadUiState(guardadoExitoso = true)
+
+                    if (original == null || !permitido) {
+                        _uiState.update {
+                            it.copy(errorOperacion = "No tienes permiso para editar esta oportunidad")
+                        }
+                        return@launch
+                    }
+
+                    repository.actualizarOportunidad(
+                        original.copy(
+                            titulo = estado.titulo.trim(),
+                            descripcion = estado.descripcion.trim(),
+                            monto = estado.costo.trim().toDouble(),
+                            prioridad = estado.prioridad,
+                            fechaEvento = estado.fechaInicio.trim(),
+                            fechaTermino = estado.fechaTermino.trim(),
+                            horario = estado.horario.trim(),
+                            lugarEvento = estado.lugar.trim(),
+                            tipoEvento = estado.tipoEvento,
+                            publicoEsperado = estado.publico.trim().toInt(),
+                            organizacionId = organizacionId,
+                            contactoId = estado.contactoId
+                        )
+                    )
+                    _uiState.update { it.copy(guardadoExitoso = true, errorOperacion = null) }
+                } else {
+                    val hoy = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+
+                    repository.guardarOportunidad(
+                        Oportunidad(
+                            titulo = estado.titulo.trim(),
+                            descripcion = estado.descripcion.trim(),
+                            monto = estado.costo.trim().toDouble(),
+                            estado = "NUEVA",
+                            prioridad = estado.prioridad,
+                            fechaCreacion = hoy,
+                            fechaEvento = estado.fechaInicio.trim(),
+                            fechaTermino = estado.fechaTermino.trim(),
+                            horario = estado.horario.trim(),
+                            lugarEvento = estado.lugar.trim(),
+                            tipoEvento = estado.tipoEvento,
+                            publicoEsperado = estado.publico.trim().toInt(),
+                            organizacionId = organizacionId,
+                            contactoId = estado.contactoId,
+                            // Ejecutivo: queda asignada a él. Supervisor: queda sin asignar.
+                            ejecutivoId = if (usuario.rol == "EJECUTIVO") usuario.id else null
+                        )
+                    )
+                    _uiState.value = OportunidadUiState(guardadoExitoso = true)
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(errorOperacion = "No se pudo guardar la oportunidad, intenta de nuevo")

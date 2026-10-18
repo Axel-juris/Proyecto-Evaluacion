@@ -14,11 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_evaluacion.components.CampoValidado
 import com.example.proyecto_evaluacion.components.SelectorDesplegable
+import com.example.proyecto_evaluacion.ui.theme.colorAdvertencia
+import com.example.proyecto_evaluacion.ui.theme.colorExito
 import com.example.proyecto_evaluacion.validation.ContactoValidator
 import com.example.proyecto_evaluacion.viewmodel.ContactoViewModel
 
@@ -41,13 +42,13 @@ fun ContactoFormScreen(
 
         Text(
             text = "Usa solo datos ficticios en todos los campos.",
-            fontSize = 12.sp
+            style = MaterialTheme.typography.bodySmall
         )
 
         if (organizaciones.isEmpty()) {
             Text(
                 text = "No hay organizaciones registradas. Primero registra una desde Inicio.",
-                color = MaterialTheme.colorScheme.error,
+                color = colorAdvertencia(),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -127,7 +128,7 @@ fun ContactoFormScreen(
         ) {
             Text(
                 text = "Contacto guardado correctamente",
-                color = MaterialTheme.colorScheme.primary
+                color = colorExito()
             )
         }
 

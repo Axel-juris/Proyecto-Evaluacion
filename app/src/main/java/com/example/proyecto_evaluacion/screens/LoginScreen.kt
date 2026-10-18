@@ -38,7 +38,7 @@ fun LoginScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
     ) {
 
-        Text("Radar de Eventos", fontSize = 27.sp)
+        Text("Radar de Eventos", style = MaterialTheme.typography.headlineMedium)
         Text("Inicia sesión para continuar")
 
         CampoValidado(
@@ -92,7 +92,6 @@ fun LoginScreen(
 
         Text(
             text = "Cuentas de prueba (clave: clave123): supervisor@duoc.cl, ana@duoc.cl, bruno@duoc.cl, carla@duoc.cl",
-            fontSize = 12.sp
-        )
+            style = MaterialTheme.typography.bodySmall        )
     }
 }

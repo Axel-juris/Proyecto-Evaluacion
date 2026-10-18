@@ -1,6 +1,5 @@
 package com.example.proyecto_evaluacion.viewmodel
 
-
 data class OportunidadUiState(
     val titulo: String = "",
     val descripcion: String = "",
@@ -30,5 +29,10 @@ data class OportunidadUiState(
     val errorCosto: String? = null,
 
     val errorOperacion: String? = null,
-    val guardadoExitoso: Boolean = false
+    val guardadoExitoso: Boolean = false,
+
+    // Modo edición: null significa que se está creando una oportunidad nueva
+    val editandoId: Int? = null,
+    val cargandoEdicion: Boolean = false,
+    val mensajeBloqueo: String? = null
 )
