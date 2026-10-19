@@ -8,13 +8,13 @@ Proyecto desarrollado para la **Evaluación Parcial 2** de la asignatura **DSY11
 
 | Nombre | Rol en el desarrollo |
 |---|---|
-| [Nombre Apellido 1] | [Axel Juris] |
-| [Nombre Apellido 2] | [Cristobal Perez] |
+| [Nombre Apellido 1] Axel Juris
+| [Nombre Apellido 2] Cristobal Perez
 
-- **Equipo N°:** [13]
-- **Sección / Sede:** [010D]
-- **Docente:** [CHRISTIAN EDUARDO ACUNA SANDOVAL]
-- **Tablero Trello:** []
+- **Equipo N°:** 13
+- **Sección / Sede:** 010D
+- **Docente:** CHRISTIAN EDUARDO ACUNA SANDOVAL
+- **Tablero Trello:**
 
 ## Contexto del problema
 
