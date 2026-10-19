@@ -6,7 +6,7 @@ Proyecto desarrollado para la **Evaluación Parcial 2** de la asignatura **DSY11
 
 ## Integrantes
 
-| Nombre | Rol en el desarrollo |
+| Nombre |
 |---|---|
 | [Nombre Apellido 1] Axel Juris
 | [Nombre Apellido 2] Cristobal Perez
