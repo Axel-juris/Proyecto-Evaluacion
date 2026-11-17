@@ -1,7 +1,8 @@
-
 package com.example.proyecto_evaluacion.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,15 +12,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlin.math.roundToInt
+import com.example.proyecto_evaluacion.components.AparecerEscalonado
+import com.example.proyecto_evaluacion.components.BotonAnimado
 import com.example.proyecto_evaluacion.components.CampoValidado
 import com.example.proyecto_evaluacion.viewmodel.LoginViewModel
 
@@ -31,6 +37,18 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Sacudida horizontal de los campos cuando las credenciales son incorrectas
+    val desplazamiento = remember { Animatable(0f) }
+    LaunchedEffect(uiState.errorLogin) {
+        if (uiState.errorLogin != null) {
+            repeat(3) {
+                desplazamiento.animateTo(14f, tween(45))
+                desplazamiento.animateTo(-14f, tween(45))
+            }
+            desplazamiento.animateTo(0f, tween(45))
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -38,24 +56,35 @@ fun LoginScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
     ) {
 
-        Text("Radar de Eventos", style = MaterialTheme.typography.headlineMedium)
-        Text("Inicia sesión para continuar")
+        AparecerEscalonado(indice = 0) {
+            Column {
+                Text("Radar de Eventos", style = MaterialTheme.typography.headlineMedium)
+                Text("Inicia sesión para continuar")
+            }
+        }
 
-        CampoValidado(
-            label = "Correo",
-            value = uiState.correo,
-            onValueChange = { viewModel.cambiarCorreo(it) },
-            error = uiState.errorCorreo,
-            keyboardType = KeyboardType.Email
-        )
+        AparecerEscalonado(indice = 1) {
+            Column(
+                modifier = Modifier.offset { IntOffset(desplazamiento.value.roundToInt(), 0) },
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                CampoValidado(
+                    label = "Correo",
+                    value = uiState.correo,
+                    onValueChange = { viewModel.cambiarCorreo(it) },
+                    error = uiState.errorCorreo,
+                    keyboardType = KeyboardType.Email
+                )
 
-        CampoValidado(
-            label = "Clave",
-            value = uiState.clave,
-            onValueChange = { viewModel.cambiarClave(it) },
-            error = uiState.errorClave,
-            visualTransformation = PasswordVisualTransformation()
-        )
+                CampoValidado(
+                    label = "Clave",
+                    value = uiState.clave,
+                    onValueChange = { viewModel.cambiarClave(it) },
+                    error = uiState.errorClave,
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            }
+        }
 
         AnimatedVisibility(
             visible = uiState.errorLogin != null,
@@ -78,20 +107,16 @@ fun LoginScreen(
             }
         }
 
-        Button(
+        BotonAnimado(
+            texto = "Ingresar",
             onClick = { viewModel.ingresar(onLoginExitoso) },
-            enabled = !uiState.cargando,
+            cargando = uiState.cargando,
             modifier = Modifier.fillMaxWidth()
-        ) {
-            if (uiState.cargando) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp))
-            } else {
-                Text("Ingresar")
-            }
-        }
+        )
 
         Text(
             text = "Cuentas de prueba (clave: clave123): supervisor@duoc.cl, ana@duoc.cl, bruno@duoc.cl, carla@duoc.cl",
-            style = MaterialTheme.typography.bodySmall        )
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }

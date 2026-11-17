@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_evaluacion.components.BotonAnimado
 import com.example.proyecto_evaluacion.components.CampoValidado
 import com.example.proyecto_evaluacion.ui.theme.colorExito
 import com.example.proyecto_evaluacion.validation.OrganizacionValidator
@@ -100,11 +101,11 @@ fun OrganizacionFormScreen(
             )
         }
 
-        Button(
+        BotonAnimado(
+            texto = "Guardar organización",
             onClick = { viewModel.guardar() },
+            exito = uiState.guardadoExitoso,
             modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Guardar organización")
-        }
+        )
     }
 }

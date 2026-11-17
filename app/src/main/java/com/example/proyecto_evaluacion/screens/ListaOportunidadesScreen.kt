@@ -25,7 +25,7 @@ import com.example.proyecto_evaluacion.ui.theme.textoEstado
 import com.example.proyecto_evaluacion.viewmodel.ListaOportunidadesViewModel
 import com.example.proyecto_evaluacion.viewmodel.OportunidadItem
 import com.example.proyecto_evaluacion.viewmodel.TODOS
-
+import com.example.proyecto_evaluacion.components.clickableAnimado
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListaOportunidadesScreen(
@@ -193,7 +193,7 @@ private fun TarjetaOportunidad(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickableAnimado(onClick)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),

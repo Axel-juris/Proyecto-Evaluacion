@@ -1,6 +1,5 @@
 package com.example.proyecto_evaluacion.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,7 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_evaluacion.components.AparecerEscalonado
+import com.example.proyecto_evaluacion.components.BotonAnimado
 import com.example.proyecto_evaluacion.components.PantallaConBarra
+import com.example.proyecto_evaluacion.components.clickableAnimado
+import com.example.proyecto_evaluacion.components.contadorAnimado
 import com.example.proyecto_evaluacion.data.SessionManager
 import com.example.proyecto_evaluacion.viewmodel.DashboardViewModel
 import com.example.proyecto_evaluacion.viewmodel.ItemDashboard
@@ -42,25 +45,27 @@ fun InicioScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (esSupervisor) {
-                        MaterialTheme.colorScheme.tertiaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.primaryContainer
+            AparecerEscalonado(indice = 0) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (esSupervisor) {
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.primaryContainer
+                        }
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Hola, ${usuario?.nombre ?: "invitado"}",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            text = if (esSupervisor) "Supervisor Comercial" else "Ejecutivo Comercial",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Hola, ${usuario?.nombre ?: "invitado"}",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Text(
-                        text = if (esSupervisor) "Supervisor Comercial" else "Ejecutivo Comercial",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
                 }
             }
 
@@ -91,24 +96,28 @@ fun InicioScreen(
                 }
 
                 SeccionDashboard(
+                    indice = 1,
                     titulo = "Gestiones atrasadas",
                     vacio = "No hay gestiones atrasadas.",
                     items = uiState.atrasadas,
                     onAbrir = onAbrirDetalle
                 )
                 SeccionDashboard(
+                    indice = 2,
                     titulo = "Eventos próximos (14 días)",
                     vacio = "No hay eventos en los próximos 14 días.",
                     items = uiState.proximos,
                     onAbrir = onAbrirDetalle
                 )
                 SeccionDashboard(
+                    indice = 3,
                     titulo = "Seguimientos pendientes",
                     vacio = "No hay seguimientos pendientes.",
                     items = uiState.pendientes,
                     onAbrir = onAbrirDetalle
                 )
                 SeccionDashboard(
+                    indice = 4,
                     titulo = "Oportunidades sin gestión",
                     vacio = "Todas las oportunidades activas tienen gestiones.",
                     items = uiState.sinGestion,
@@ -120,26 +129,39 @@ fun InicioScreen(
 
             Text(text = "Acciones", style = MaterialTheme.typography.titleMedium)
 
-            Button(onClick = onIrALista, modifier = Modifier.fillMaxWidth()) {
-                Text(if (esSupervisor) "Ver todas las oportunidades" else "Mis oportunidades")
-            }
+            BotonAnimado(
+                texto = if (esSupervisor) "Ver todas las oportunidades" else "Mis oportunidades",
+                onClick = onIrALista,
+                modifier = Modifier.fillMaxWidth()
+            )
             if (esSupervisor) {
-                Button(onClick = onIrAPanel, modifier = Modifier.fillMaxWidth()) {
-                    Text("Panel del supervisor")
-                }
+                BotonAnimado(
+                    texto = "Panel del supervisor",
+                    onClick = onIrAPanel,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
-            Button(onClick = onIrAOportunidad, modifier = Modifier.fillMaxWidth()) {
-                Text("Nueva oportunidad")
-            }
-            Button(onClick = onIrAOrganizacion, modifier = Modifier.fillMaxWidth()) {
-                Text("Nueva organización")
-            }
-            Button(onClick = onIrAContacto, modifier = Modifier.fillMaxWidth()) {
-                Text("Nuevo contacto")
-            }
-            OutlinedButton(onClick = onCerrarSesion, modifier = Modifier.fillMaxWidth()) {
-                Text("Cerrar sesión")
-            }
+            BotonAnimado(
+                texto = "Nueva oportunidad",
+                onClick = onIrAOportunidad,
+                modifier = Modifier.fillMaxWidth()
+            )
+            BotonAnimado(
+                texto = "Nueva organización",
+                onClick = onIrAOrganizacion,
+                modifier = Modifier.fillMaxWidth()
+            )
+            BotonAnimado(
+                texto = "Nuevo contacto",
+                onClick = onIrAContacto,
+                modifier = Modifier.fillMaxWidth()
+            )
+            BotonAnimado(
+                texto = "Cerrar sesión",
+                onClick = onCerrarSesion,
+                contorno = true,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -159,7 +181,7 @@ private fun Contador(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = valor.toString(),
+                text = contadorAnimado(valor).toString(),
                 style = MaterialTheme.typography.headlineMedium,
                 color = if (destacar) {
                     MaterialTheme.colorScheme.error
@@ -174,34 +196,39 @@ private fun Contador(
 
 @Composable
 private fun SeccionDashboard(
+    indice: Int,
     titulo: String,
     vacio: String,
     items: List<ItemDashboard>,
     onAbrir: (Int) -> Unit
 ) {
-    Text(text = titulo, style = MaterialTheme.typography.titleMedium)
+    AparecerEscalonado(indice = indice) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(text = titulo, style = MaterialTheme.typography.titleMedium)
 
-    if (items.isEmpty()) {
-        Text(text = vacio, style = MaterialTheme.typography.bodySmall)
-    } else {
-        items.take(5).forEach { item ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAbrir(item.oportunidadId) }
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = item.titulo, style = MaterialTheme.typography.titleSmall)
-                    Text(text = item.organizacion, style = MaterialTheme.typography.bodyMedium)
-                    Text(text = item.detalle, style = MaterialTheme.typography.bodySmall)
+            if (items.isEmpty()) {
+                Text(text = vacio, style = MaterialTheme.typography.bodySmall)
+            } else {
+                items.take(5).forEach { item ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickableAnimado { onAbrir(item.oportunidadId) }
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(text = item.titulo, style = MaterialTheme.typography.titleSmall)
+                            Text(text = item.organizacion, style = MaterialTheme.typography.bodyMedium)
+                            Text(text = item.detalle, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+                if (items.size > 5) {
+                    Text(
+                        text = "y ${items.size - 5} más en la lista de oportunidades",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
-        }
-        if (items.size > 5) {
-            Text(
-                text = "y ${items.size - 5} más en la lista de oportunidades",
-                style = MaterialTheme.typography.bodySmall
-            )
         }
     }
 }

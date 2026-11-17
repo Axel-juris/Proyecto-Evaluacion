@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_evaluacion.components.BotonAnimado
 import com.example.proyecto_evaluacion.components.CampoValidado
 import com.example.proyecto_evaluacion.components.SelectorDesplegable
 import com.example.proyecto_evaluacion.data.SessionManager
@@ -247,12 +248,12 @@ fun OportunidadFormScreen(
                 )
             }
 
-            Button(
+            BotonAnimado(
+                texto = if (editando) "Guardar cambios" else "Guardar oportunidad",
                 onClick = { viewModel.guardar() },
+                exito = uiState.guardadoExitoso,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (editando) "Guardar cambios" else "Guardar oportunidad")
-            }
+            )
         }
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_evaluacion.components.BotonAnimado
 import com.example.proyecto_evaluacion.components.CampoValidado
 import com.example.proyecto_evaluacion.components.SelectorDesplegable
 import com.example.proyecto_evaluacion.ui.theme.colorAdvertencia
@@ -142,13 +143,13 @@ fun ContactoFormScreen(
                 color = MaterialTheme.colorScheme.error
             )
         }
-
-        Button(
+        BotonAnimado(
+            texto = "Guardar contacto",
             onClick = { viewModel.guardar() },
+            exito = uiState.guardadoExitoso,
             modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Guardar contacto")
-        }
+        )
+
 
         HorizontalDivider()
 

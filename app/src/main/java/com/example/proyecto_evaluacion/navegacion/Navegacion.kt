@@ -1,7 +1,11 @@
 package com.example.proyecto_evaluacion.navegacion
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,20 +47,30 @@ fun Navegacion() {
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = "login",
+        // Transiciones globales: la pantalla nueva entra desde la derecha y la anterior
+        // se desplaza un poco hacia la izquierda; al volver ocurre lo contrario.
+        enterTransition = { slideInHorizontally(tween(350)) { it / 3 } + fadeIn(tween(350)) },
+        exitTransition = { slideOutHorizontally(tween(350)) { -it / 6 } + fadeOut(tween(250)) },
+        popEnterTransition = { slideInHorizontally(tween(350)) { -it / 6 } + fadeIn(tween(350)) },
+        popExitTransition = { slideOutHorizontally(tween(350)) { it / 3 } + fadeOut(tween(250)) }
     ) {
 
-        composable("login") {
-            Scaffold { innerPadding ->
-                LoginScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onLoginExitoso = {
-                        navController.navigate("inicio") {
-                            popUpTo("login") { inclusive = true }
-                        }
+        // El inicio de sesión usa solo fundido, porque no es una pantalla "de la pila"
+        composable(
+            route = "login",
+            enterTransition = { fadeIn(tween(400)) },
+            exitTransition = { fadeOut(tween(300)) },
+            popEnterTransition = { fadeIn(tween(400)) },
+            popExitTransition = { fadeOut(tween(300)) }
+        ) {
+            LoginScreen(
+                onLoginExitoso = {
+                    navController.navigate("inicio") {
+                        popUpTo("login") { inclusive = true }
                     }
-                )
-            }
+                }
+            )
         }
 
         composable("inicio") {
