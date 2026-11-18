@@ -2,6 +2,7 @@ package com.example.proyecto_evaluacion.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_evaluacion.data.Contacto
 import com.example.proyecto_evaluacion.data.CrmRepository
@@ -27,10 +28,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class OportunidadViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = CrmRepository.getInstance(application)
-
+class OportunidadViewModel(
+    private val repository: CrmRepository = CrmRepository.instancia
+) : ViewModel() {
     private val _uiState = MutableStateFlow(OportunidadUiState())
     val uiState: StateFlow<OportunidadUiState> = _uiState.asStateFlow()
 

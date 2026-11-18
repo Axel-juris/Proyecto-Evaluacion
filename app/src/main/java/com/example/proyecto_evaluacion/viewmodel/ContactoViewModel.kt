@@ -2,6 +2,7 @@ package com.example.proyecto_evaluacion.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_evaluacion.data.Contacto
 import com.example.proyecto_evaluacion.data.CrmRepository
@@ -20,9 +21,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ContactoViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = CrmRepository.getInstance(application)
+class ContactoViewModel(
+    private val repository: CrmRepository = CrmRepository.instancia
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ContactoUiState())
     val uiState: StateFlow<ContactoUiState> = _uiState.asStateFlow()

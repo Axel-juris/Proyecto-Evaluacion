@@ -2,6 +2,7 @@ package com.example.proyecto_evaluacion.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_evaluacion.data.CrmRepository
 import com.example.proyecto_evaluacion.data.Oportunidad
@@ -16,10 +17,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
-class ListaOportunidadesViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = CrmRepository.getInstance(application)
-
+class ListaOportunidadesViewModel(
+    private val repository: CrmRepository = CrmRepository.instancia
+) : ViewModel() {
     private val usuario = SessionManager.usuarioActual.value
 
     private val _filtros = MutableStateFlow(FiltrosLista())

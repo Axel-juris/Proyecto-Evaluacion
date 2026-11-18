@@ -30,9 +30,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class DetalleOportunidadViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = CrmRepository.getInstance(application)
+// Necesita el contexto de la aplicación para manejar los archivos de las fotos.
+// @JvmOverloads genera el constructor que solo recibe Application, el que usa viewModel().
+class DetalleOportunidadViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repository: CrmRepository = CrmRepository.instancia
+) : AndroidViewModel(application) {
     private val usuario = SessionManager.usuarioActual.value
 
     private val idOportunidad = MutableStateFlow<Int?>(null)

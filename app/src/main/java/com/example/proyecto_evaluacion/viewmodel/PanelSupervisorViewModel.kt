@@ -2,6 +2,7 @@ package com.example.proyecto_evaluacion.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_evaluacion.data.CrmRepository
 import com.example.proyecto_evaluacion.data.SessionManager
@@ -26,10 +27,9 @@ data class PanelSupervisorUiState(
     val sinAsignar: List<ItemDashboard> = emptyList()
 )
 
-class PanelSupervisorViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = CrmRepository.getInstance(application)
-
+class PanelSupervisorViewModel(
+    private val repository: CrmRepository = CrmRepository.instancia
+) : ViewModel() {
     // Si no es supervisor, ni siquiera se consultan los datos globales
     val uiState: StateFlow<PanelSupervisorUiState> = if (!SessionManager.esSupervisor()) {
         MutableStateFlow(PanelSupervisorUiState(cargando = false, autorizado = false))
