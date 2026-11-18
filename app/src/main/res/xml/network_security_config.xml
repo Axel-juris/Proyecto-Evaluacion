@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Permite http solo hacia el computador que ejecuta los microservicios.
+         10.0.2.2 = tu PC visto desde el emulador de Android.
+         Si pruebas con un teléfono real, agrega aquí la IP de tu PC (ej. 192.168.1.50). -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>
