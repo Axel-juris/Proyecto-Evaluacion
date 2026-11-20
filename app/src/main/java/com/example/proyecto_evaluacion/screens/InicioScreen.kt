@@ -17,7 +17,9 @@ import com.example.proyecto_evaluacion.components.PantallaConBarra
 import com.example.proyecto_evaluacion.components.clickableAnimado
 import com.example.proyecto_evaluacion.components.contadorAnimado
 import com.example.proyecto_evaluacion.data.SessionManager
+import com.example.proyecto_evaluacion.fechas.FeriadosHelper
 import com.example.proyecto_evaluacion.viewmodel.DashboardViewModel
+import com.example.proyecto_evaluacion.viewmodel.FeriadosUiState
 import com.example.proyecto_evaluacion.viewmodel.ItemDashboard
 
 @Composable
@@ -33,6 +35,7 @@ fun InicioScreen(
 ) {
     val usuario by SessionManager.usuarioActual.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val feriados by viewModel.feriados.collectAsStateWithLifecycle()
     val esSupervisor = usuario?.rol == "SUPERVISOR"
 
     PantallaConBarra(titulo = "Radar de Eventos") { innerPadding ->
@@ -125,6 +128,8 @@ fun InicioScreen(
                 )
             }
 
+            SeccionFeriados(feriados)
+
             HorizontalDivider()
 
             Text(text = "Acciones", style = MaterialTheme.typography.titleMedium)
@@ -162,6 +167,58 @@ fun InicioScreen(
                 contorno = true,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+    }
+}
+
+@Composable
+private fun SeccionFeriados(estado: FeriadosUiState) {
+    // Copia local: así Kotlin puede confirmar que no es nula dentro del when
+    val error = estado.error
+
+    AparecerEscalonado(indice = 5) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(text = "Próximos feriados en Chile", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Útil para evitar agendar eventos en días no hábiles.",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            when {
+                estado.cargando -> LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+
+                error != null -> Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+
+                estado.feriados.isEmpty() -> Text(
+                    text = "No hay feriados próximos.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                else -> estado.feriados.forEach { feriado ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = feriado.localName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = FeriadosHelper.formatear(feriado.date),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -21,7 +21,8 @@ data class EstadoFormulario(
 
     val mensajeExito: String? = null,
     val mensajeError: String? = null,
-    val seguimientoGuardado: Boolean = false
+    val seguimientoGuardado: Boolean = false,
+    val oportunidadEliminada: Boolean = false
 )
 
 data class DetalleOportunidadUiState(
@@ -35,6 +36,7 @@ data class DetalleOportunidadUiState(
     val esSupervisor: Boolean = false,
     val autorizado: Boolean = true,
     val puedeEditar: Boolean = false,
+    val puedeEliminar: Boolean = false,
     val transicionesPermitidas: List<String> = emptyList(),
     val form: EstadoFormulario = EstadoFormulario()
 )

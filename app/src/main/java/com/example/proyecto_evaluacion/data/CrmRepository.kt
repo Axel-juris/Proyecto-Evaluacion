@@ -115,7 +115,7 @@ class CrmRepository(
         }
 
     fun observarOportunidad(id: Int): Flow<Oportunidad?> =
-        observar<Oportunidad?>(null) { oportunidadesApi.obtenerOportunidad(id) }
+        observar<Oportunidad?>(null) { getOportunidadPorId(id) }
 
     /** Devuelve la oportunidad, o null si no existe (404). */
     suspend fun getOportunidadPorId(id: Int): Oportunidad? {

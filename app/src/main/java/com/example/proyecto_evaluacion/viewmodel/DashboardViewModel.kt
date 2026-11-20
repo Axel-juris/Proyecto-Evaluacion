@@ -14,11 +14,51 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import com.example.proyecto_evaluacion.data.FeriadosRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class DashboardViewModel(
-    private val repository: CrmRepository = CrmRepository.instancia
+    private val repository: CrmRepository = CrmRepository.instancia,
+    private val feriadosRepository: FeriadosRepository = FeriadosRepository()
 ) : ViewModel() {
     private val usuario = SessionManager.usuarioActual.value
+
+    // Feriados (API externa): estado propio, separado de los datos de los microservicios
+    private val _feriados = MutableStateFlow(FeriadosUiState())
+    val feriados: StateFlow<FeriadosUiState> = _feriados.asStateFlow()
+
+    init {
+        cargarFeriados()
+    }
+
+    fun cargarFeriados() {
+        viewModelScope.launch {
+            _feriados.update { it.copy(cargando = true, error = null) }
+            try {
+                val anio = Calendar.getInstance().get(Calendar.YEAR)
+                val hoy = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                val proximos = feriadosRepository.proximosFeriados(anio, hoy)
+                _feriados.update { it.copy(cargando = false, feriados = proximos) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _feriados.update {
+                    it.copy(
+                        cargando = false,
+                        error = e.message ?: "No se pudieron cargar los feriados"
+                    )
+                }
+            }
+        }
+    }
 
     // Restricción por rol: el supervisor ve todas; el ejecutivo solo las asignadas a él
     private val fuente: Flow<List<Oportunidad>> =

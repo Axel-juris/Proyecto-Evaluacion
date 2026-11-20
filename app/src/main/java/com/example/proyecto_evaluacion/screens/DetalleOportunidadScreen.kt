@@ -49,12 +49,18 @@ fun DetalleOportunidadScreen(
     oportunidadId: Int,
     modifier: Modifier = Modifier,
     onEditar: (Int) -> Unit = {},
+    onEliminada: () -> Unit = {},
     viewModel: DetalleOportunidadViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(oportunidadId) {
         viewModel.cargar(oportunidadId)
+    }
+
+    // Tras eliminar, se vuelve a la pantalla anterior
+    LaunchedEffect(uiState.form.oportunidadEliminada) {
+        if (uiState.form.oportunidadEliminada) onEliminada()
     }
 
     val oportunidad = uiState.oportunidad
@@ -101,6 +107,7 @@ private fun ContenidoDetalle(
     val context = LocalContext.current
     val form = uiState.form
     var mostrarFormulario by remember { mutableStateOf(false) }
+    var confirmarEliminar by remember { mutableStateOf(false) }
 
     // Se guarda con rememberSaveable por si el sistema recrea la pantalla mientras está la cámara abierta
     var uriPendiente by rememberSaveable { mutableStateOf<String?>(null) }
@@ -286,6 +293,46 @@ private fun ContenidoDetalle(
                 ) {
                     Text("Editar oportunidad")
                 }
+            }
+
+            if (uiState.puedeEliminar) {
+                OutlinedButton(
+                    onClick = { confirmarEliminar = true },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Eliminar oportunidad")
+                }
+            }
+
+            if (confirmarEliminar) {
+                AlertDialog(
+                    onDismissRequest = { confirmarEliminar = false },
+                    title = { Text("¿Eliminar oportunidad?") },
+                    text = {
+                        Text(
+                            "Se eliminará \"${oportunidad.titulo}\" junto con todas sus gestiones. " +
+                                    "Esta acción no se puede deshacer."
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                confirmarEliminar = false
+                                viewModel.eliminarOportunidad()
+                            }
+                        ) {
+                            Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { confirmarEliminar = false }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
             }
 
             Text(text = "Estado de la gestión", style = MaterialTheme.typography.titleMedium)

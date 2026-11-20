@@ -14,6 +14,9 @@ object RetrofitClient {
     private const val URL_USUARIOS = "http://$HOST:8081/"
     private const val URL_OPORTUNIDADES = "http://$HOST:8082/"
 
+    // API externa (pública, con https, por eso no necesita permiso especial de red)
+    private const val URL_FERIADOS = "https://date.nager.at/"
+
     // Si el servidor está apagado, se falla en pocos segundos en vez de quedar cargando
     private val cliente: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -35,4 +38,6 @@ object RetrofitClient {
     val oportunidadesApi: OportunidadesApi by lazy {
         crear(URL_OPORTUNIDADES, OportunidadesApi::class.java)
     }
+
+    val feriadosApi: FeriadosApi by lazy { crear(URL_FERIADOS, FeriadosApi::class.java) }
 }

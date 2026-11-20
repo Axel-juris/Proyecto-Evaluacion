@@ -35,6 +35,27 @@ object ReglasEstado {
             usuarioId != null &&
                     ejecutivoId == usuarioId &&
                     (estado == "NUEVA" || estado == "EN_GESTION")
+
+        else -> false
+    }
+
+    // Eliminación: el supervisor siempre; el ejecutivo solo si es suya y aún no inició la gestión
+    fun puedeEliminar(
+        rol: String?,
+        usuarioId: Int?,
+        ejecutivoId: Int?,
+        estado: String
+    ): Boolean = when (rol) {
+        "SUPERVISOR" -> true
+        "EJECUTIVO" ->
+            usuarioId != null &&
+                    ejecutivoId == usuarioId &&
+                    estado == "NUEVA"
         else -> false
     }
 }
+
+
+
+
+

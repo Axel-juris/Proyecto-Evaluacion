@@ -127,7 +127,8 @@ fun Navegacion() {
                 DetalleOportunidadScreen(
                     oportunidadId = id,
                     modifier = Modifier.padding(innerPadding),
-                    onEditar = { oportunidadId -> navController.navigate("editar/$oportunidadId") }
+                    onEditar = { oportunidadId -> navController.navigate("editar/$oportunidadId") },
+                    onEliminar = { navController.popBackStack() }
                 )
             }
         }

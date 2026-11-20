@@ -113,6 +113,9 @@ class DetalleOportunidadViewModel @JvmOverloads constructor(
                 puedeEditar = ReglasEstado.puedeEditar(
                     rol, idUsuario, oportunidad.ejecutivoId, oportunidad.estado
                 ),
+                puedeEliminar = ReglasEstado.puedeEliminar(
+                    rol, idUsuario, oportunidad.ejecutivoId, oportunidad.estado
+                ),
                 transicionesPermitidas = if (autorizado && rol != null) {
                     ReglasEstado.transicionesPermitidas(oportunidad.estado, rol)
                 } else {
@@ -238,6 +241,25 @@ class DetalleOportunidadViewModel @JvmOverloads constructor(
                 informar("Responsable asignado correctamente", null)
             } catch (e: Exception) {
                 informar(null, "No se pudo asignar el responsable, intenta de nuevo")
+            }
+        }
+    }
+    fun eliminarOportunidad() {
+        val estado = uiState.value
+        val oportunidad = estado.oportunidad ?: return
+
+        // La regla se comprueba aquí y no solo en la pantalla
+        if (!estado.autorizado || !estado.puedeEliminar) {
+            informar(null, "No tienes permiso para eliminar esta oportunidad")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                repository.eliminarOportunidad(oportunidad.id)
+                _form.update { it.copy(oportunidadEliminada = true) }
+            } catch (e: Exception) {
+                informar(null, "No se pudo eliminar la oportunidad, intenta de nuevo")
             }
         }
     }
