@@ -128,7 +128,7 @@ fun Navegacion() {
                     oportunidadId = id,
                     modifier = Modifier.padding(innerPadding),
                     onEditar = { oportunidadId -> navController.navigate("editar/$oportunidadId") },
-                    onEliminar = { navController.popBackStack() }
+                    onEliminada = { navController.popBackStack() }
                 )
             }
         }
