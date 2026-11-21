@@ -2,12 +2,15 @@ package com.example.proyecto_evaluacion.validation
 
 object LoginValidator {
 
-    fun validarCorreo(correo: String): String? = when {
-        correo.isBlank() -> "El correo es obligatorio"
-        correo.contains(" ") -> "No debe contener espacios"
-        !Regex("^[^@]+@[^@]+\\.[^@]+$").matches(correo.trim()) ->
-            "Formato inválido, por ejemplo ana@duoc.cl"
-        else -> null
+    fun validarCorreo(correo: String): String? {
+        val trimmed = correo.trim()
+        return when {
+            trimmed.isBlank() -> "El correo es obligatorio"
+            trimmed.contains(" ") -> "No debe contener espacios"
+            !Regex("^[^@]+@[^@]+\\.[^@]+$").matches(trimmed) ->
+                "Formato inválido, por ejemplo ana@duoc.cl"
+            else -> null
+        }
     }
 
     fun validarClave(clave: String): String? = when {

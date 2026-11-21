@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -35,6 +36,12 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests {
+            // Las clases de android.jar devuelven valores por defecto en vez de lanzar "not mocked"
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
@@ -57,10 +64,51 @@ dependencies {
     implementation(libs.converter.gson)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation(kotlin("test"))
+}
+
+// ---------------------------------------------------------------------------
+// Cobertura de pruebas unitarias con Kover (guía DSY1105)
+//   Reporte HTML : ./gradlew :app:koverHtmlReportDebug
+//                  -> app/build/reports/kover/htmlDebug/index.html
+//   Verificación : ./gradlew :app:koverVerifyDebug   (falla si la cobertura < 80 %)
+//
+// Se mide solo la lógica: ViewModels, Repository, validadores, mapeo de errores,
+// sesión y utilidades de fecha. No se cuenta la presentación visual (screens,
+// components, navegacion, ui.theme), MainActivity, RetrofitClient (configuración),
+// ni las clases que dependen del sistema Android (Calendario, Evidencias).
+// ---------------------------------------------------------------------------
+kover {
+    reports {
+        filters {
+            includes {
+                packages(
+                    "com.example.proyecto_evaluacion.validation",
+                    "com.example.proyecto_evaluacion.viewmodel"
+                )
+                classes(
+                    "com.example.proyecto_evaluacion.data.CrmRepository*",
+                    "com.example.proyecto_evaluacion.data.FeriadosRepository*",
+                    "com.example.proyecto_evaluacion.data.ApiErrorMapperKt*",
+                    "com.example.proyecto_evaluacion.data.SessionManager*",
+                    "com.example.proyecto_evaluacion.data.ErrorAplicacion*",
+                    "com.example.proyecto_evaluacion.fechas.Fechas*",
+                    "com.example.proyecto_evaluacion.fechas.FeriadosHelper*"
+                )
+            }
+        }
+        verify {
+            rule("Cobertura minima de logica") {
+                minBound(80)
+            }
+        }
+    }
 }
