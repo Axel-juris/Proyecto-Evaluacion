@@ -6,11 +6,14 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-
+    //& $adb reverse tcp:8081 tcp:8081
+    //& $adb reverse tcp:8082 tcp:8082
+    //& $adb install -r release\RadarEventos-v1.0-build1.apk
+//./gradlew :app:koverHtmlReportDebug
+//./gradlew :app:koverVerifyDebug
     // 10.0.2.2 = el PC desde el emulador. Con un teléfono real, usa la IP de tu PC
     // (y agrégala también en res/xml/network_security_config.xml).
-    private const val HOST = "10.0.2.2"
-
+    private const val HOST = "localhost"
     private const val URL_USUARIOS = "http://$HOST:8081/"
     private const val URL_OPORTUNIDADES = "http://$HOST:8082/"
 

@@ -4,6 +4,6 @@
          10.0.2.2 = tu PC visto desde el emulador de Android.
          Si pruebas con un teléfono real, agrega aquí la IP de tu PC (ej. 192.168.1.50). -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
     </domain-config>
 </network-security-config>

@@ -1,7 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kover)
+}
+
+// ---------------------------------------------------------------------------
+// Versionado (cambiar aquí al publicar una nueva versión; NO cambiar applicationId)
+// ---------------------------------------------------------------------------
+val appNombre = "RadarEventos"
+val appVersionCode = 1
+val appVersionName = "1.0"
+
+// Credenciales de firma: se leen de keystore.properties (raíz del proyecto)
+val keystoreProps = Properties().apply {
+    val archivo = rootProject.file("keystore.properties")
+    if (archivo.exists()) archivo.inputStream().use { load(it) }
 }
 
 android {
@@ -16,14 +31,26 @@ android {
         applicationId = "com.example.proyecto_evaluacion"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystoreProps.isNotEmpty()) {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             optimization {
                 enable = false
             }
@@ -111,4 +138,18 @@ kover {
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// APK firmado con nombre legible: RadarEventos-v1.0-build1.apk
+//   Comando : ./gradlew :app:exportarApkRelease
+//   Salida  : <raiz del proyecto>/release/   (carpeta que se sube al repositorio)
+// ---------------------------------------------------------------------------
+tasks.register<Copy>("exportarApkRelease") {
+    dependsOn("assembleRelease")
+    from(layout.buildDirectory.dir("outputs/apk/release")) {
+        include("app-release.apk")
+        rename { "$appNombre-v$appVersionName-build$appVersionCode.apk" }
+    }
+    into(rootProject.layout.projectDirectory.dir("release"))
 }
