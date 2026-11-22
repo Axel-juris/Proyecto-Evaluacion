@@ -9,6 +9,9 @@ data class OrganizacionUiState(
     val sitioWeb: String = "",
     val observaciones: String = "",
 
+    // Si no es null, el formulario está editando esa organización (en vez de crear una nueva)
+    val organizacionEditandoId: Int? = null,
+
     val errorNombre: String? = null,
     val errorTipo: String? = null,
     val errorRubro: String? = null,
@@ -18,5 +21,7 @@ data class OrganizacionUiState(
     val errorObservaciones: String? = null,
 
     val errorOperacion: String? = null,
-    val guardadoExitoso: Boolean = false
+    val guardadoExitoso: Boolean = false,
+    // Texto de confirmación tras crear, actualizar o eliminar
+    val mensajeExito: String? = null
 )

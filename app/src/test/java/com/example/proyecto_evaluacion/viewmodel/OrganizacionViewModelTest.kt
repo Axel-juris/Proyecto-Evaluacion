@@ -123,4 +123,109 @@ class OrganizacionViewModelTest {
 
         assertEquals(listOf("Acme SpA"), vm.organizaciones.value.map { it.nombre })
     }
+    // AGREGAR estos tests DENTRO de la clase OrganizacionViewModelTest existente
+// (antes de la última llave "}"). No hacen falta imports nuevos.
+
+    @Test
+    fun editar_carga_los_datos_de_la_organizacion_en_el_formulario() {
+        vm.editar(organizacion(1, "Acme SpA"))
+
+        val e = vm.uiState.value
+        assertEquals(1, e.organizacionEditandoId)
+        assertEquals("Acme SpA", e.nombre)
+        assertEquals("Empresa", e.tipo)
+        assertEquals("Retail", e.rubro)
+        assertEquals("Santiago", e.comuna)
+        assertEquals("Metropolitana", e.region)
+        assertNull(e.errorNombre)
+    }
+
+    @Test
+    fun guardar_en_modo_edicion_actualiza_y_no_crea() {
+        val enviada = slot<Organizacion>()
+        coEvery { repo.actualizarOrganizacion(capture(enviada)) } just Runs
+        vm.editar(organizacion(1, "Acme SpA"))
+        vm.cambiarRubro("Servicios")
+
+        vm.guardar()
+
+        assertEquals(1, enviada.captured.id)
+        assertEquals("Servicios", enviada.captured.rubro)
+        coVerify(exactly = 1) { repo.actualizarOrganizacion(any()) }
+        coVerify(exactly = 0) { repo.guardarOrganizacion(any()) }
+        val e = vm.uiState.value
+        assertTrue(e.guardadoExitoso)
+        assertEquals("Organización actualizada correctamente", e.mensajeExito)
+        assertNull(e.organizacionEditandoId)
+        assertEquals("", e.nombre)
+    }
+
+    @Test
+    fun si_falla_la_actualizacion_se_muestra_error_y_sigue_en_edicion() {
+        coEvery { repo.actualizarOrganizacion(any()) } throws RuntimeException("falló")
+        vm.editar(organizacion(1, "Acme SpA"))
+
+        vm.guardar()
+
+        val e = vm.uiState.value
+        assertEquals("No se pudo actualizar la organización, intenta de nuevo", e.errorOperacion)
+        assertEquals(1, e.organizacionEditandoId)
+        assertFalse(e.guardadoExitoso)
+    }
+
+    @Test
+    fun editar_con_datos_invalidos_no_llama_al_servidor() {
+        vm.editar(organizacion(1, "Acme SpA"))
+        vm.cambiarNombre("")
+
+        vm.guardar()
+
+        assertNotNull(vm.uiState.value.errorNombre)
+        coVerify(exactly = 0) { repo.actualizarOrganizacion(any()) }
+    }
+
+    @Test
+    fun cancelar_edicion_deja_el_formulario_vacio() {
+        vm.editar(organizacion(1, "Acme SpA"))
+
+        vm.cancelarEdicion()
+
+        val e = vm.uiState.value
+        assertNull(e.organizacionEditandoId)
+        assertEquals("", e.nombre)
+        assertEquals("", e.tipo)
+    }
+
+    @Test
+    fun eliminar_llama_al_repositorio_y_muestra_confirmacion() {
+        coEvery { repo.eliminarOrganizacion(1) } just Runs
+
+        vm.eliminar(organizacion(1, "Acme SpA"))
+
+        coVerify(exactly = 1) { repo.eliminarOrganizacion(1) }
+        assertEquals("Organización eliminada correctamente", vm.uiState.value.mensajeExito)
+        assertNull(vm.uiState.value.errorOperacion)
+    }
+
+    @Test
+    fun eliminar_la_organizacion_que_se_edita_limpia_el_formulario() {
+        coEvery { repo.eliminarOrganizacion(1) } just Runs
+        vm.editar(organizacion(1, "Acme SpA"))
+
+        vm.eliminar(organizacion(1, "Acme SpA"))
+
+        val e = vm.uiState.value
+        assertNull(e.organizacionEditandoId)
+        assertEquals("", e.nombre)
+    }
+
+    @Test
+    fun si_falla_eliminar_se_muestra_error() {
+        coEvery { repo.eliminarOrganizacion(1) } throws RuntimeException("falló")
+
+        vm.eliminar(organizacion(1, "Acme SpA"))
+
+        assertNotNull(vm.uiState.value.errorOperacion)
+        assertNull(vm.uiState.value.mensajeExito)
+    }
 }

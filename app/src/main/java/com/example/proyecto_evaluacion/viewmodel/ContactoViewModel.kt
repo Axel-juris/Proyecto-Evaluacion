@@ -1,7 +1,5 @@
 package com.example.proyecto_evaluacion.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_evaluacion.data.Contacto
@@ -28,7 +26,7 @@ class ContactoViewModel(
     private val _uiState = MutableStateFlow(ContactoUiState())
     val uiState: StateFlow<ContactoUiState> = _uiState.asStateFlow()
 
-    // Organizaciones guardadas en Room, para el menú desplegable
+    // Organizaciones registradas, para el menú desplegable
     val organizaciones: StateFlow<List<Organizacion>> = repository.getOrganizaciones()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -42,95 +40,93 @@ class ContactoViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun seleccionarOrganizacion(id: Int, nombre: String) {
+    // Aplica un cambio al estado y limpia los avisos anteriores
+    private fun actualizar(cambio: (ContactoUiState) -> ContactoUiState) {
         _uiState.update {
+            cambio(it).copy(
+                errorOperacion = null,
+                guardadoExitoso = false,
+                mensajeExito = null
+            )
+        }
+    }
+
+    fun seleccionarOrganizacion(id: Int, nombre: String) {
+        actualizar {
             it.copy(
                 organizacionId = id,
                 organizacionNombre = nombre,
                 errorOrganizacion = ContactoValidator.validarOrganizacion(nombre),
-                errorOperacion = null,
-                guardadoExitoso = false
+                // Si se cambia de organización, se abandona la edición en curso
+                contactoEditandoId = if (it.organizacionId == id) it.contactoEditandoId else null
             )
         }
     }
 
     fun cambiarNombre(valor: String) {
-        _uiState.update {
-            it.copy(
-                nombre = valor,
-                errorNombre = ContactoValidator.validarNombre(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
-            )
-        }
+        actualizar { it.copy(nombre = valor, errorNombre = ContactoValidator.validarNombre(valor)) }
     }
 
     fun cambiarCargo(valor: String) {
-        _uiState.update {
-            it.copy(
-                cargo = valor,
-                errorCargo = ContactoValidator.validarCargo(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
-            )
-        }
+        actualizar { it.copy(cargo = valor, errorCargo = ContactoValidator.validarCargo(valor)) }
     }
 
     fun cambiarArea(valor: String) {
-        _uiState.update {
-            it.copy(
-                area = valor,
-                errorArea = ContactoValidator.validarArea(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
-            )
-        }
+        actualizar { it.copy(area = valor, errorArea = ContactoValidator.validarArea(valor)) }
     }
 
     fun cambiarCorreo(valor: String) {
-        _uiState.update {
-            it.copy(
-                correo = valor,
-                errorCorreo = ContactoValidator.validarCorreo(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
-            )
-        }
+        actualizar { it.copy(correo = valor, errorCorreo = ContactoValidator.validarCorreo(valor)) }
     }
 
     fun cambiarTelefono(valor: String) {
-        _uiState.update {
-            it.copy(
-                telefono = valor,
-                errorTelefono = ContactoValidator.validarTelefono(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
-            )
+        actualizar {
+            it.copy(telefono = valor, errorTelefono = ContactoValidator.validarTelefono(valor))
         }
     }
 
     fun cambiarMedio(valor: String) {
-        _uiState.update {
-            it.copy(
-                medio = valor,
-                errorMedio = ContactoValidator.validarMedio(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
-            )
-        }
+        actualizar { it.copy(medio = valor, errorMedio = ContactoValidator.validarMedio(valor)) }
     }
 
     fun cambiarObservaciones(valor: String) {
-        _uiState.update {
+        actualizar {
             it.copy(
                 observaciones = valor,
-                errorObservaciones = ContactoValidator.validarObservaciones(valor),
-                errorOperacion = null,
-                guardadoExitoso = false
+                errorObservaciones = ContactoValidator.validarObservaciones(valor)
             )
         }
     }
 
+    /** Carga un contacto existente en el formulario para modificarlo. */
+    fun editar(contacto: Contacto) {
+        _uiState.update {
+            ContactoUiState(
+                organizacionId = contacto.organizacionId,
+                organizacionNombre = it.organizacionNombre,
+                nombre = contacto.nombre,
+                cargo = contacto.cargo,
+                area = contacto.area,
+                correo = contacto.correo,
+                telefono = contacto.telefono,
+                medio = contacto.medioPreferente,
+                observaciones = contacto.observaciones,
+                contactoEditandoId = contacto.id
+            )
+        }
+    }
+
+    /** Sale del modo edición y deja el formulario vacío (conserva la organización). */
+    fun cancelarEdicion() {
+        _uiState.update {
+            ContactoUiState(
+                organizacionId = it.organizacionId,
+                organizacionNombre = it.organizacionNombre
+            )
+        }
+    }
+
+    /** Crea el contacto, o lo actualiza si el formulario está en modo edición. */
     fun guardar() {
         val estado = _uiState.value
 
@@ -155,7 +151,8 @@ class ContactoViewModel(
                 errorMedio = errorMedio,
                 errorObservaciones = errorObservaciones,
                 errorOperacion = null,
-                guardadoExitoso = false
+                guardadoExitoso = false,
+                mensajeExito = null
             )
         }
 
@@ -167,30 +164,79 @@ class ContactoViewModel(
         if (!formularioValido) return
 
         val organizacionId = estado.organizacionId ?: return
+        val editandoId = estado.contactoEditandoId
 
         viewModelScope.launch {
             try {
-                repository.guardarContacto(
-                    Contacto(
-                        organizacionId = organizacionId,
-                        nombre = estado.nombre.trim(),
-                        cargo = estado.cargo.trim(),
-                        area = estado.area.trim(),
-                        correo = estado.correo.trim(),
-                        telefono = estado.telefono.trim(),
-                        medioPreferente = estado.medio.trim(),
-                        observaciones = estado.observaciones.trim()
-                    )
+                val contacto = Contacto(
+                    id = editandoId ?: 0,
+                    organizacionId = organizacionId,
+                    nombre = estado.nombre.trim(),
+                    cargo = estado.cargo.trim(),
+                    area = estado.area.trim(),
+                    correo = estado.correo.trim(),
+                    telefono = estado.telefono.trim(),
+                    medioPreferente = estado.medio.trim(),
+                    observaciones = estado.observaciones.trim()
                 )
-                // Limpia el formulario pero conserva la organización, para agregar otro contacto a la misma
+                if (editandoId == null) {
+                    repository.guardarContacto(contacto)
+                } else {
+                    repository.actualizarContacto(contacto)
+                }
+                // Limpia el formulario pero conserva la organización, para seguir trabajando en ella
                 _uiState.value = ContactoUiState(
                     organizacionId = estado.organizacionId,
                     organizacionNombre = estado.organizacionNombre,
-                    guardadoExitoso = true
+                    guardadoExitoso = true,
+                    mensajeExito = if (editandoId == null) {
+                        "Contacto guardado correctamente"
+                    } else {
+                        "Contacto actualizado correctamente"
+                    }
                 )
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(errorOperacion = "No se pudo guardar el contacto, intenta de nuevo")
+                    it.copy(
+                        errorOperacion = if (editandoId == null) {
+                            "No se pudo guardar el contacto, intenta de nuevo"
+                        } else {
+                            "No se pudo actualizar el contacto, intenta de nuevo"
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    /** Elimina un contacto. Si justo se estaba editando, el formulario se limpia. */
+    fun eliminar(contacto: Contacto) {
+        viewModelScope.launch {
+            try {
+                repository.eliminarContacto(contacto.id)
+                _uiState.update {
+                    val estabaEditandolo = it.contactoEditandoId == contacto.id
+                    val base = if (estabaEditandolo) {
+                        ContactoUiState(
+                            organizacionId = it.organizacionId,
+                            organizacionNombre = it.organizacionNombre
+                        )
+                    } else {
+                        it
+                    }
+                    base.copy(
+                        errorOperacion = null,
+                        guardadoExitoso = false,
+                        mensajeExito = "Contacto eliminado correctamente"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        mensajeExito = null,
+                        errorOperacion = "No se pudo eliminar el contacto. " +
+                                "Si está asociado a una oportunidad, no se puede borrar."
+                    )
                 }
             }
         }

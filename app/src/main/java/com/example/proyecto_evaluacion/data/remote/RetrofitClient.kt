@@ -6,9 +6,17 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    //& $adb reverse tcp:8081 tcp:8081
+    //levantamiento
+   // $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+    //Test-Path $adb
+    //& $adb devices
+    // $adb reverse tcp:8081 tcp:8081
     //& $adb reverse tcp:8082 tcp:8082
+    //& $adb reverse --list
     //& $adb install -r release\RadarEventos-v1.0-build1.apk
+
+    //test
+  //  .\gradlew.bat :app:koverHtmlReportDebug
 //./gradlew :app:koverHtmlReportDebug
 //./gradlew :app:koverVerifyDebug
     // 10.0.2.2 = el PC desde el emulador. Con un teléfono real, usa la IP de tu PC

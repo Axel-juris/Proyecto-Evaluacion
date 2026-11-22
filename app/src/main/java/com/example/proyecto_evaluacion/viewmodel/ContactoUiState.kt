@@ -11,6 +11,9 @@ data class ContactoUiState(
     val medio: String = "",
     val observaciones: String = "",
 
+    // Si no es null, el formulario está editando ese contacto (en vez de crear uno nuevo)
+    val contactoEditandoId: Int? = null,
+
     val errorOrganizacion: String? = null,
     val errorNombre: String? = null,
     val errorCargo: String? = null,
@@ -21,5 +24,7 @@ data class ContactoUiState(
     val errorObservaciones: String? = null,
 
     val errorOperacion: String? = null,
-    val guardadoExitoso: Boolean = false
+    val guardadoExitoso: Boolean = false,
+    // Texto de confirmación tras crear, actualizar o eliminar
+    val mensajeExito: String? = null
 )

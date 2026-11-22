@@ -11,6 +11,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -19,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_evaluacion.components.BotonAnimado
 import com.example.proyecto_evaluacion.components.CampoValidado
 import com.example.proyecto_evaluacion.components.SelectorDesplegable
+import com.example.proyecto_evaluacion.data.Contacto
 import com.example.proyecto_evaluacion.ui.theme.colorAdvertencia
 import com.example.proyecto_evaluacion.ui.theme.colorExito
 import com.example.proyecto_evaluacion.validation.ContactoValidator
@@ -32,6 +36,10 @@ fun ContactoFormScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val organizaciones by viewModel.organizaciones.collectAsStateWithLifecycle()
     val contactos by viewModel.contactos.collectAsStateWithLifecycle()
+
+    // Contacto que el usuario pidió eliminar y está esperando confirmación
+    var contactoAEliminar by remember { mutableStateOf<Contacto?>(null) }
+    val editando = uiState.contactoEditandoId != null
 
     Column(
         modifier = modifier
@@ -51,6 +59,18 @@ fun ContactoFormScreen(
                 text = "No hay organizaciones registradas. Primero registra una desde Inicio.",
                 color = colorAdvertencia(),
                 style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        AnimatedVisibility(
+            visible = editando,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Text(
+                text = "Editando contacto",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
             )
         }
 
@@ -123,12 +143,12 @@ fun ContactoFormScreen(
         )
 
         AnimatedVisibility(
-            visible = uiState.guardadoExitoso,
+            visible = uiState.mensajeExito != null,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
             Text(
-                text = "Contacto guardado correctamente",
+                text = uiState.mensajeExito ?: "",
                 color = colorExito()
             )
         }
@@ -143,13 +163,22 @@ fun ContactoFormScreen(
                 color = MaterialTheme.colorScheme.error
             )
         }
+
         BotonAnimado(
-            texto = "Guardar contacto",
+            texto = if (editando) "Actualizar contacto" else "Guardar contacto",
             onClick = { viewModel.guardar() },
             exito = uiState.guardadoExitoso,
             modifier = Modifier.fillMaxWidth()
         )
 
+        if (editando) {
+            BotonAnimado(
+                texto = "Cancelar edición",
+                onClick = { viewModel.cancelarEdicion() },
+                contorno = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         HorizontalDivider()
 
@@ -189,10 +218,46 @@ fun ContactoFormScreen(
                                 text = "Prefiere: ${contacto.medioPreferente}",
                                 style = MaterialTheme.typography.bodySmall
                             )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(onClick = { viewModel.editar(contacto) }) {
+                                    Text("Editar")
+                                }
+                                TextButton(onClick = { contactoAEliminar = contacto }) {
+                                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    // Confirmación antes de eliminar
+    contactoAEliminar?.let { contacto ->
+        AlertDialog(
+            onDismissRequest = { contactoAEliminar = null },
+            title = { Text("¿Eliminar contacto?") },
+            text = { Text("Se eliminará a \"${contacto.nombre}\". Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.eliminar(contacto)
+                        contactoAEliminar = null
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { contactoAEliminar = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
