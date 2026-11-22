@@ -280,3 +280,7 @@ Este proyecto es un **producto mínimo viable** académico, sin integraciones pr
 ## Control de versiones
 
 El repositorio sigue commits técnicos con el formato `tipo: descripción` (`feat`, `fix`, `chore`) y la planificación de tareas se encuentra en Trello.
+
+
+Evaluación 3:
+
